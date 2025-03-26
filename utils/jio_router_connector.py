@@ -1,4 +1,3 @@
-import re
 import urequests as requests
 
 class JioRouterConnector():
