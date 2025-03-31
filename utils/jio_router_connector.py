@@ -1,4 +1,7 @@
 import urequests as requests
+from utils.html import extract_table
+from models.table import Table
+from utils.string import strip_newlines
 
 class JioRouterConnector():
     """
@@ -19,13 +22,14 @@ class JioRouterConnector():
     USERS_PAGE = ''
 
     
-    def __init__(self, username: str, password: str, router_base: str):
+    def __init__(self, username: str, password: str, router_base: str, router_ip: str):
         """
         Constructor
         """
         self._username = username
         self._password = password
         self._router_base = router_base
+        self._router_ip = router_ip
         self._auth_cookie = ''
     
     def connect(self) -> bool:
@@ -35,8 +39,10 @@ class JioRouterConnector():
         login_headers = self._get_headers()
         login_payload = self._get_login_payload()
         login_payload_serialized = JioRouterConnector._construct_form_body(login_payload)
+        login_resource_url = f"http://{self._router_ip}/{self.PLATFORMS_PAGE}"
+        print(login_resource_url)
         login_response = requests.post(
-            f"{self.ROUTER_BASE}{self.PLATFORMS_PAGE}",
+            login_resource_url,
             data=login_payload_serialized,
             headers=login_headers,
             parse_headers=True
@@ -50,13 +56,14 @@ class JioRouterConnector():
         self._extract_session_cookie(login_response)
         return True
     
-    def get_usage_statistics(self) -> None:
+    def get_usage_statistics(self) -> Table:
         """
         Gets the Usage Statistics from the Router Login Page
         """
         response = self._get_usage_page_response()
-        print(response.text)
         # Extract the required information from the response as a text.
+        table_data = extract_table(strip_newlines(response.text), 'recordsData2')
+        return table_data
 
     def close_connnection(self):
         """
@@ -99,7 +106,7 @@ class JioRouterConnector():
         query_params = dict()
         query_params['page'] = self.DEVICE_STATS_PAGE_NAME
         query_params_string = JioRouterConnector._construct_form_body(query_params)
-        request_url = f"{self._router_base}{self.PLATFORMS_PAGE}?{query_params_string}"
+        request_url = f"http://{self._router_ip}/{self.PLATFORMS_PAGE}?{query_params_string}"
         headers = self._get_headers()
         response = requests.get(
             request_url,

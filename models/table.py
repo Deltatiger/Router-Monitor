@@ -1,8 +1,10 @@
+from utils.string import ljust
+
 class Table:
     """
     Model that represents a generic table with a heading
     """
-    def __init__(self, headers: list[str], rows: list[dict]):
+    def __init__(self, headers: list[str], rows: list[list]):
         """
         Constructor
         """
@@ -19,10 +21,31 @@ class Table:
         """
         Gets the row at the given Index
         """
-        return self._rows[index]
+        row_data = {}
+        for header_index in range(0, len(self._headers)):
+            row_data[self._headers[header_index]] = self._rows[index][header_index]
+        return row_data
     
     def get_cell(self, column: str, row_index: number):
         """
         Gets the value of the cell represented by the Column and Row
         """
-        return self._rows[row_index][column]
+        header_index = self._headers.index(column)
+        return self._rows[row_index][header_index]
+    
+    def __str__(self):
+        """
+        Returns the representation of the table
+        """
+        col_widths = [max(len(str(item)) for item in col) for col in zip(*([self._headers] + self._rows))]
+        printable = ''
+        
+        # Header Row
+        printable += " | ".join(ljust(str(item), width) for item, width in zip(self._headers, col_widths))
+        printable += "\n"
+        # Body Row
+        for row in self._rows:
+            printable += " | ".join(ljust(str(item), width) for item, width in zip(row, col_widths))
+            printable += "\n"
+        
+        return printable

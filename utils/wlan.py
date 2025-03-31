@@ -14,5 +14,6 @@ def connect(ssid, password):
             return False
     global network_ip
     network_ip = wlan.ifconfig()[0]
+    print(network_ip)
     print('Connection established')
     return True

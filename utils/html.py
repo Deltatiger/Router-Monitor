@@ -77,21 +77,19 @@ def _parse_table_rows(table_data: str, headers: list[str]) -> list[dict]:
     return rows
 
 
-def _convert_row_data_to_dict(row_data: str, headers: list[str]) -> dict:
+def _convert_row_data_to_dict(row_data: str, headers: list[str]) -> list:
     """
     Converts the row data into proper cells and maps them to the header
     """
     td_content_pattern = re.compile('<td class="gradeA">(.*?)</td>')
-    parsed_row = {}
-    header_index = 0
+    parsed_row = []
     while True:
         matches = td_content_pattern.search(row_data)
         if not matches or len(matches.groups()) == 0:
             break
         # Map this with the headers when adding
         cell_content = _strip_html_tags(matches.groups()[0])
-        parsed_row[headers[header_index]] = cell_content
-        header_index = header_index + 1
+        parsed_row.append(cell_content)
         row_data = td_content_pattern.sub('', row_data, 1)
     return parsed_row
 
