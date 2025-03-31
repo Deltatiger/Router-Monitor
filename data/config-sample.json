@@ -4,5 +4,6 @@
     "router_ip": "",
     "router_username": "",
     "router_password": "",
-    "router_base": ""
+    "router_base": "",
+    "known_macs": ['']
 }

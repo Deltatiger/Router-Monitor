@@ -27,7 +27,12 @@ if __name__ == '__main__':
     if not router_connector.connect():
         print('Cannot login to the Router. Aborting.')
         sys.exit(-3)
-        
-    # Read the Device Statistics
-    stats = router_connector.get_usage_statistics()
-    print(stats)
+    # Get the list of approved MACs
+    allowed_macs = set([mac_address.lower() for mac_address in config['known_macs']])
+    print(allowed_macs)
+    devices = router_connector.get_all_clients()
+    for device in devices:
+        safe_mac_address = device.mac_address.lower()
+        if safe_mac_address not in allowed_macs:
+            print(device)
+            print('Device is not recognized')

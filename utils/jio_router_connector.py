@@ -2,6 +2,7 @@ import urequests as requests
 from utils.html import extract_table
 from models.table import Table
 from utils.string import strip_newlines
+from models.device import Device
 
 class JioRouterConnector():
     """
@@ -17,9 +18,13 @@ class JioRouterConnector():
     """
     DEVICE_STATS_PAGE_NAME = 'deviceStatistics.html'
     """
-    Resource for the Users Page
+    Page showing the details about the LAN Clients connected to the router
     """
-    USERS_PAGE = ''
+    LAN_CLIENTS_PAGE_NAME = 'lanDhcpLeasedClients.html'
+    """
+    Page showing the details about the Wireless clients connected to the router
+    """
+    WLAN_CLIENTS_PAGE_NAME = 'wirelessClients.html'
 
     
     def __init__(self, username: str, password: str, router_base: str, router_ip: str):
@@ -40,15 +45,12 @@ class JioRouterConnector():
         login_payload = self._get_login_payload()
         login_payload_serialized = JioRouterConnector._construct_form_body(login_payload)
         login_resource_url = f"http://{self._router_ip}/{self.PLATFORMS_PAGE}"
-        print(login_resource_url)
         login_response = requests.post(
             login_resource_url,
             data=login_payload_serialized,
             headers=login_headers,
             parse_headers=True
         )
-        print(login_response.status_code)
-        print(login_response.headers)
         if login_response.status_code == 404:
             print ("Login failed with Error 404")
             return False
@@ -60,10 +62,47 @@ class JioRouterConnector():
         """
         Gets the Usage Statistics from the Router Login Page
         """
-        response = self._get_usage_page_response()
-        # Extract the required information from the response as a text.
+        response = self._get_response_for_page(self.DEVICE_STATS_PAGE_NAME)
         table_data = extract_table(strip_newlines(response.text), 'recordsData2')
         return table_data
+    
+    def get_lan_clients(self) -> list[Device]:
+        """
+        Gets the LAN clients connected to the router
+        """
+        response = self._get_response_for_page(self.LAN_CLIENTS_PAGE_NAME)
+        table_data = extract_table(strip_newlines(response.text), 'recordsData')
+        # Convert the table to list of devices
+        devices = []
+        for row_iter in range(0, len(table_data)):
+            device_data = Device()
+            device_data.device_ip = table_data.get_cell(row_iter, 'IPv4 Address')
+            device_data.mac_address = table_data.get_cell(row_iter, 'MAC Address')
+            device_data.connection_mode = 'LAN'
+            devices.append(device_data)
+        return devices
+    
+    def get_wlan_clients(self) -> list[Device]:
+        """
+        Gets the WLAN Clients connected to the Router
+        """
+        response = self._get_response_for_page(self.WLAN_CLIENTS_PAGE_NAME)
+        table_data = extract_table(strip_newlines(response.text), 'recordsData')
+        devices = []
+        for row_iter in range(0, len(table_data)):
+            device_data = Device()
+            device_data.mac_address = table_data.get_cell(row_iter, 'MAC Address')
+            device_data.connection_mode = 'WLAN'
+            devices.append(device_data)
+        return devices
+    
+    def get_all_clients(self) -> list[Device]:
+        """
+        Gets all the clients connected to the Router
+        """
+        wlan_devices = self.get_wlan_clients()
+        lan_devices = self.get_lan_clients()
+        return wlan_devices + lan_devices
 
     def close_connnection(self):
         """
@@ -98,13 +137,19 @@ class JioRouterConnector():
         if self._auth_cookie is not None:
             headers['cookie'] = self._auth_cookie
         return headers
-
-    def _get_usage_page_response(self) -> requests.Response:
+    
+    def _extract_session_cookie(self, response: requests.Response) -> None:
         """
-        Gets the Response from the Usage Page Request
+        Extract the required cookie information from the Response
+        """
+        self._auth_cookie = response.headers['Set-Cookie']
+        
+    def _get_response_for_page(self, page_name: str) -> requests.Response:
+        """
+        Makes a GET Response for the page specified
         """
         query_params = dict()
-        query_params['page'] = self.DEVICE_STATS_PAGE_NAME
+        query_params['page'] = page_name
         query_params_string = JioRouterConnector._construct_form_body(query_params)
         request_url = f"http://{self._router_ip}/{self.PLATFORMS_PAGE}?{query_params_string}"
         headers = self._get_headers()
@@ -114,20 +159,14 @@ class JioRouterConnector():
         )
         return response
     
-    def _extract_session_cookie(self, response: requests.Response) -> None:
+    def _dump_page_to_file(self, page_response_text: str) -> None:
         """
-        Extract the required cookie information from the Response
+        Dump the contents of the response to file
         """
-        self._auth_cookie = response.headers['Set-Cookie']
+        fp = open('output.out', 'w')
+        fp.write(page_response_text)
+        fp.close()
 
-    def _extract_stats_from_page(self, response: str) -> None:
-        """
-        Extract Stats from the Page Response Text
-        """
-        table_start_index = response.index('id="recordsData2"') # This is the second table starting point
-
-        pass
-    
     def _construct_form_body(data: dict) -> str:
         """
         Construct a form body response from the given data

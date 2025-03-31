@@ -26,14 +26,20 @@ class Table:
             row_data[self._headers[header_index]] = self._rows[index][header_index]
         return row_data
     
-    def get_cell(self, column: str, row_index: number):
+    def get_cell(self, row_index: int, column: str):
         """
         Gets the value of the cell represented by the Column and Row
         """
         header_index = self._headers.index(column)
         return self._rows[row_index][header_index]
     
-    def __str__(self):
+    def __len__(self) -> int:
+        """
+        Gets the number of rows for the table
+        """
+        return len(self._rows)
+    
+    def __str__(self) -> str:
         """
         Returns the representation of the table
         """
