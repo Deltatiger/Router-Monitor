@@ -1,0 +1,11 @@
+# On-going
+
+* Update the Router tracker to also read the up time for the APs
+* Figure out if we can read the Values for the LAN clients
+
+# Pending
+
+* Create the Store for the Data on disk and create the accessors
+* Identify the components required for the tracking time
+
+# Completed

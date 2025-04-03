@@ -2,7 +2,23 @@ import re
 from models.table import Table
 # This is the Utils related to the HTML
 
-def extract_table(html_text: str, table_id: str) -> list[dict]:
+
+def extract_generic_html_tag(html_text: str, pattern: str) -> str:
+    """
+    Extract a generic HTML tag and return the contents of the tag matching the pattern
+    """
+    pattern = re.compile(pattern)
+    matches = pattern.search(html_text)
+    
+    if matches is None:
+        return None
+
+    # Return the first value
+    matched_groups = matches.groups()
+    return matched_groups[0]
+    
+
+def extract_table(html_text: str, table_id: str) -> Table:
     """
     Extract the Table information from the HTML DOM and return it in a structured manner
     """

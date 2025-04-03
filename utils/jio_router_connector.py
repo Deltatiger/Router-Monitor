@@ -1,5 +1,5 @@
 import urequests as requests
-from utils.html import extract_table
+from utils.html import extract_table, extract_generic_html_tag
 from models.table import Table
 from utils.string import strip_newlines
 from models.device import Device
@@ -25,6 +25,10 @@ class JioRouterConnector():
     Page showing the details about the Wireless clients connected to the router
     """
     WLAN_CLIENTS_PAGE_NAME = 'wirelessClients.html'
+    """
+    Page showing the details of the Device Status
+    """
+    DEVICE_STATUS_PAGE_NAME = 'deviceStatus.html'
 
     
     def __init__(self, username: str, password: str, router_base: str, router_ip: str):
@@ -58,6 +62,19 @@ class JioRouterConnector():
         self._extract_session_cookie(login_response)
         return True
     
+    def get_uptime(self) -> int:
+        """
+        Gets the uptime of the router
+        """
+        response = self._get_response_for_page(self.DEVICE_STATUS_PAGE_NAME)
+        # We only need one string from the Page response
+        uptime_tag_contents = extract_generic_html_tag(
+            strip_newlines(response.text),
+            '<div class="configRow"><label>Uptime</label><p>(.*?)</p></div>'
+        )
+        print(uptime_tag_contents)
+        return 0
+        
     def get_usage_statistics(self) -> Table:
         """
         Gets the Usage Statistics from the Router Login Page

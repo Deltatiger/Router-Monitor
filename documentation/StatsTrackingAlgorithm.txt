@@ -1,0 +1,44 @@
+This is a description of the Algorithm / logic segment used for tracking the statistics and sending out emails
+
+Overall Steps:
+
+1. Start the tracking process
+    i. Read the stats data from disk
+2. Initialize the time [TODO Is timing even possible on Pi?]
+3. Check when the last run was ?
+    i. If this is a sequential run, follow process A
+    ii. If there was a break in the process, follow B
+4. Update the stats to the accumulation data
+5. Sleep for the required interval
+
+
+Process A:
+
+# This defines a regular flow, where the router is normal and the pi is normal and this is just a sequential read after a x minute sleep operation
+
+1. For each AP that is available, get the last read time and value.
+2. Subtract the values from the current
+3. Add the difference value to the accumulation store.
+
+
+Process B:
+
+# This defines the process when either the Router or the Pi has been restarted.
+# When this happens, either of the following things could happen:
+
+B.A: Pi was restarted / was offline for sometime. This means we have missed some readings.
+B.B: Router was restarted. This means that reported values would be refreshed / restarted.
+
+Process B.A:
+
+# This happens when the Pi was restarted. This could again go into couple of scenarios.
+# B.A.A: The Pi Router was restarted due to some power issue. It started again but it missed some readings.
+# 		 We resume based on the readings from the Router. We also track the time the router has been active.
+# 		 We have to figure out the difference that needs to be added to the accumulators.
+# B.A.B: Why did we say we have couple of scenarios ?
+
+Process B.B:
+
+# This happens when the router was restarted. Here we don't know for how long the router was offline.
+# So we just get whatever we have from the router and add it the accumulator.
+# We also update the last read values in the store.

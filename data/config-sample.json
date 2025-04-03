@@ -5,5 +5,8 @@
     "router_username": "",
     "router_password": "",
     "router_base": "",
-    "known_macs": ['']
+    "known_macs": [''],
+    "email.username": "",
+    "email.password": "",
+    "stats_file_path": "data/stats.json"
 }
